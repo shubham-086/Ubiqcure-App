@@ -78,12 +78,15 @@ const ClinicSlots = () => {
 
   const getIssuedTokens = async () => {
     try {
+      setLoading(true);
       const slots = await getBookedSlots(
         bookingInfo.clinicId,
         bookingInfo.docId,
         date
       );
+      setLoading(false);
       setBookedSlots(slots);
+      console.log(slots);
     } catch (error) {
       console.log("Error in fetching booked slots: ", error);
     }
@@ -97,6 +100,8 @@ const ClinicSlots = () => {
       </View>
     );
   }
+
+  console.log(slots);
 
   const morningSlots = slots.filter((slot) => slot.Shift === "Morning");
   const afternoonSlots = slots.filter((slot) => slot.Shift === "Noon");

@@ -1,6 +1,12 @@
-import { View, Text, TouchableOpacity } from "react-native";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  ScrollView,
+  RefreshControl,
+} from "react-native";
 import { useNavigation } from "@react-navigation/native";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Header from "@/components/Header";
 import { getHistory, getUpcomig } from "@/api/appointments";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -10,6 +16,7 @@ const MyBookings = () => {
   const [user, setUser] = useState({});
   const [upcoming, setUpcoming] = useState([]);
   const [history, setHistory] = useState([]);
+  const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
     async function fetchData() {
@@ -17,8 +24,9 @@ const MyBookings = () => {
       await upcomingAppointments(user.Id);
       await historyAppointments(user.Id);
     }
+    console.log("Refreshing");
     fetchData();
-  }, []);
+  }, [refreshing]);
 
   const getUser = async () => {
     const user = await AsyncStorage.getItem("user");
@@ -38,51 +46,66 @@ const MyBookings = () => {
     // console.log("History: ", history);
   };
 
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    setTimeout(() => {
+      setRefreshing(false);
+    }, 2000);
+  }, []);
+
   return (
     <View className="flex-1">
       <Header title={"Appointments"} />
       <View className="flex-1 bg-white ">
-        <View className="w-full max-w-md mx-auto bg-white rounded-lg shadow-md">
-          <View className="flex flex-row justify-between mb-4">
-            <TouchableOpacity
-              onPress={() => setTab("upcoming")}
-              activeOpacity={0.7}
-              className={`text-white font-bold p-3 w-1/2 ${
-                tab === "upcoming"
-                  ? "border-b-2 border-primary"
-                  : "border-b border-gray-300"
-              }`}
-            >
-              <View className="flex flex-row justify-center items-center">
-                <Text className="text-center text-lg text-bold">Upcoming</Text>
-                <View className="bg-primary p-1 py-1 px-2.5 rounded-full ml-4">
-                  <Text className="text-white">{upcoming.length}</Text>
+        <ScrollView
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          }
+        >
+          <View className="w-full max-w-md mx-auto bg-white rounded-lg shadow-md">
+            <View className="flex flex-row justify-between mb-4">
+              <TouchableOpacity
+                onPress={() => setTab("upcoming")}
+                activeOpacity={0.7}
+                className={`text-white font-bold p-3 w-1/2 ${
+                  tab === "upcoming"
+                    ? "border-b-2 border-primary"
+                    : "border-b border-gray-300"
+                }`}
+              >
+                <View className="flex flex-row justify-center items-center">
+                  <Text className="text-center text-lg text-bold">
+                    Upcoming
+                  </Text>
+                  <View className="bg-primary p-1 py-1 px-2.5 rounded-full ml-4">
+                    <Text className="text-white">{upcoming.length}</Text>
+                  </View>
                 </View>
-              </View>
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={() => setTab("history")}
-              activeOpacity={0.7}
-              className={`text-white font-bold p-3 w-1/2  ${
-                tab === "history"
-                  ? "border-b-2 border-primary"
-                  : "border-b border-gray-300"
-              }`}
-            >
-              <View className="flex flex-row justify-center items-center">
-                <Text className="text-center text-lg text-bold">History</Text>
-                <View className="bg-primary p-1 py-1 px-2.5 rounded-full ml-4">
-                  <Text className="text-white">{history.length}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => setTab("history")}
+                activeOpacity={0.7}
+                className={`text-white font-bold p-3 w-1/2  ${
+                  tab === "history"
+                    ? "border-b-2 border-primary"
+                    : "border-b border-gray-300"
+                }`}
+              >
+                <View className="flex flex-row justify-center items-center">
+                  <Text className="text-center text-lg text-bold">History</Text>
+                  <View className="bg-primary p-1 py-1 px-2.5 rounded-full ml-4">
+                    <Text className="text-white">{history.length}</Text>
+                  </View>
                 </View>
-              </View>
-            </TouchableOpacity>
+              </TouchableOpacity>
+            </View>
+            {tab === "upcoming" ? (
+              <UpcomingAppointments upcoming={upcoming} />
+            ) : (
+              <AppointmentHistory history={history} />
+            )}
           </View>
-          {tab === "upcoming" ? (
-            <UpcomingAppointments upcoming={upcoming} />
-          ) : (
-            <AppointmentHistory history={history} />
-          )}
-        </View>
+        </ScrollView>
       </View>
     </View>
   );

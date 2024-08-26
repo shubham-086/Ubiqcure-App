@@ -97,7 +97,7 @@ const Login = () => {
                 Login
               </Text>
               <Text className="text-primary text-start text-lg">
-                Please varify your phone number.
+                Please verify your phone number.
               </Text>
             </View>
             <View className="mb-4">

@@ -7,8 +7,9 @@ import {
   TouchableOpacity,
   StyleSheet,
   ActivityIndicator,
+  RefreshControl,
 } from "react-native";
-import React, { useContext, useEffect, useState } from "react";
+import React, { useCallback, useContext, useEffect, useState } from "react";
 import Header from "@/components/Header";
 const { height, width } = Dimensions.get("window");
 import { useNavigation } from "@react-navigation/native";
@@ -62,6 +63,7 @@ const CardItem = ({ item }) => {
 const DoctorList = () => {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
     getAllDoctors()
@@ -73,6 +75,13 @@ const DoctorList = () => {
         console.error("Error fetching data: ", error);
         setLoading(false);
       });
+  }, [refreshing]);
+
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    setTimeout(() => {
+      setRefreshing(false);
+    }, 2000);
   }, []);
 
   if (loading) {
@@ -96,6 +105,9 @@ const DoctorList = () => {
             style={{ marginTop: 15 }}
             renderItem={({ item }) => <CardItem item={item} />}
             keyExtractor={(item) => item.Id.toString()}
+            refreshControl={
+              <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+            }
           />
         </View>
       </View>

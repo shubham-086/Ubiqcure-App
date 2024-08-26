@@ -8,7 +8,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import {
   createToken,
   insertPaymentReq,
-  varifyPayment,
+  verifyPayment,
 } from "../../api/booking";
 import { sendBookingDetails } from "../../api/sendSMS";
 
@@ -101,10 +101,10 @@ const Checkout = () => {
 
   const getRazorpayOptions = (orderId) => {
     return {
-      description: "Credits towards consultation",
+      description: "Appointment Booking",
       image: "@/assets/images/logo.jpg",
       currency: "INR",
-      key: "rzp_test_UJ8ZXl62Ib8Ekf", // Your api key
+      key: "rzp_live_Ec7Q03czlqIxAi",
       order_id: orderId,
       amount: "100",
       name: "UBIQCURE",
@@ -119,7 +119,7 @@ const Checkout = () => {
 
   const handlePaymentSuccess = async (data) => {
     try {
-      const response = await varifyPayment(
+      const response = await verifyPayment(
         data.razorpay_order_id,
         data.razorpay_payment_id,
         data.razorpay_signature
@@ -178,7 +178,7 @@ const Checkout = () => {
   };
 
   return (
-    <View className="flex-1">
+    <View className="flex-1 bg-white">
       <Header title={"Checkout"} />
       <ScrollView>
         <View className="p-5 ">

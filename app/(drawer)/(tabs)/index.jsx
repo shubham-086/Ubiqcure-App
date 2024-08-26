@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   View,
   Text,
@@ -7,7 +7,6 @@ import {
   TextInput,
   ScrollView,
   StatusBar,
-  StyleSheet,
   RefreshControl,
 } from "react-native";
 import AntDesign from "@expo/vector-icons/AntDesign";
@@ -20,6 +19,7 @@ export default function HomeScreen() {
   const [placeholder, setPlaceholder] = useState("Search for doctors");
   const navigation = useNavigation();
   const [refreshing, setRefreshing] = useState(false);
+  const inputRef = useRef("");
 
   useEffect(() => {
     const intervalId = setInterval(() => {
@@ -30,7 +30,11 @@ export default function HomeScreen() {
       );
     }, 3000);
     return () => clearInterval(intervalId);
-  }, [placeholder, refreshing, setRefreshing]);
+  }, [placeholder]);
+
+  const handleInputChange = (e) => {
+    inputRef.current = e.target.value;
+  };
 
   const onRefresh = React.useCallback(() => {
     setRefreshing(true);
@@ -43,7 +47,7 @@ export default function HomeScreen() {
     <View className="flex-1">
       <StatusBar backgroundColor={"#006298"} barStyle={"light-content"} />
       <View className="flex-1 bg-white">
-        <View className="px-3 py-4">
+        <View className="px-3 py-3">
           <View className="flex-row items-center justify-between">
             <DrawerMenu />
             <View className="flex-row gap-2 items-center justify-center">
@@ -60,6 +64,8 @@ export default function HomeScreen() {
           <View className="pt-4">
             <TextInput
               placeholder={placeholder}
+              value={inputRef.current}
+              onChange={handleInputChange}
               className="w-full p-2 px-5 border border-blue-300 rounded-full"
             />
           </View>
@@ -69,19 +75,22 @@ export default function HomeScreen() {
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
           }
         >
-          <View className="pt-2 pb-5">
-            <View className="mb-8 px-3">
-              <Text className="text-2xl font-bold text-center text-primary">
-                Striving For Your Better Healthcare!
+          <View className="pb-2">
+            <View className="mb-5 px-3">
+              <Text className="text-xl font-bold text-center text-primary">
+                Striving for Your Better Healthcare!
               </Text>
-              <Text className="mt-2 text-center text-gray-700">
-                Book your doctor appointments and Track your token status live!
-                Get real-time updates and estimated consultation times for a
-                smooth, hassle-free visit.
+              <Text className="mt-2 text-center font-bold text-gray-700">
+                Why to wait at Doctor's Clinics when you can track your
+                appointment. Reach at clinic only at your turn.
+              </Text>
+              <Text className="mt-1 text-center font-bold text-gray-700">
+                Book your doctor's appointments & Track your token status live!
+                Get real-time updates & save your time.
               </Text>
             </View>
 
-            <View className="mb-10 bg-primary px-2 py-4">
+            <View className="mb-5 bg-primary px-2 py-4">
               <View className="flex flex-row items-center gap-4 mb-4 pl-2">
                 <View className="rounded-full p-2 bg-white w-auto flex-shrink">
                   <AntDesign name="staro" size={20} color={"black"} />
@@ -106,7 +115,7 @@ export default function HomeScreen() {
                       className="w-full h-32 rounded-lg rounded-b-none"
                     />
                     <View className="p-4">
-                      <Text className="text-base font-semibold text-gray-700">
+                      <Text className="text-sm font-semibold text-gray-700">
                         Book Appointment
                       </Text>
                     </View>
@@ -117,7 +126,7 @@ export default function HomeScreen() {
               <View className="w-1/2 pl-2 bg-white">
                 <TouchableOpacity
                   activeOpacity={0.6}
-                  // onPress={() => navigation.navigate("(pages)/tracking")}
+                  onPress={() => navigation.navigate("myBookings")}
                   className=""
                 >
                   <View className="border-2 border-gray-200 rounded-lg">
@@ -129,7 +138,7 @@ export default function HomeScreen() {
                       className="w-full h-32 rounded-lg rounded-b-none"
                     />
                     <View className="p-4">
-                      <Text className="text-base font-semibold text-gray-700">
+                      <Text className="text-sm font-semibold text-gray-700">
                         Track Appointment
                       </Text>
                     </View>

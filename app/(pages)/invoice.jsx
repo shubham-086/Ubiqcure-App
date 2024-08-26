@@ -64,7 +64,7 @@ const Invoice = () => {
   };
 
   return (
-    <View className="flex-1">
+    <View className="flex-1 bg-white">
       <View className="flex-row items-center px-4 py-3 bg-primary">
         <TouchableOpacity
           className="pr-5"

@@ -133,7 +133,7 @@ export const insertPaymentReq = async (
   }
 };
 
-export const varifyPayment = async (orderId, paymentId, signature) => {
+export const verifyPayment = async (orderId, paymentId, signature) => {
   const data = { orderId, paymentId, signature };
   try {
     const response = await axios.post(

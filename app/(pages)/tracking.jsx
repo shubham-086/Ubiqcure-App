@@ -1,5 +1,12 @@
-import React, { useEffect, useState } from "react";
-import { View, Text, Image, TouchableOpacity, ScrollView } from "react-native";
+import React, { useCallback, useEffect, useState } from "react";
+import {
+  View,
+  Text,
+  Image,
+  TouchableOpacity,
+  ScrollView,
+  RefreshControl,
+} from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import Header from "../../components/Header";
 // import MapView from "react-native-maps";
@@ -11,6 +18,7 @@ const Tracking = () => {
   const { bookingId } = useLocalSearchParams();
   const [tokenDetails, setTokenDetails] = useState({});
   const [mapRegion, setMapRegion] = useState({});
+  const [refreshing, setRefreshing] = useState(false);
 
   function getFormatedDate(utcDateString) {
     const utcDate = new Date(utcDateString);
@@ -47,17 +55,27 @@ const Tracking = () => {
     }
   };
 
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    setTimeout(() => {
+      setRefreshing(false);
+    }, 2000);
+  }, []);
+
   useEffect(() => {
     fetchTokenDetails();
-  }, [bookingId]);
+  }, [bookingId, refreshing]);
 
   const iframeSrc = `https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3561.545939224378!2d80.99571637514089!3d26.790740065322243!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x399be5319a1ee6e3%3A0xb591b5df4b31ef9d!2sSkyline%20plaza%203!5e0!3m2!1sen!2sin!4v1724403001325!5m2!1sen!2sin`;
 
   return (
     <View className="flex-1 bg-white">
       <Header title={"Track Appointmnet"} />
-
-      <ScrollView>
+      <ScrollView
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
+      >
         <View className="p-3">
           <View className="p-4">
             <View className="">
