@@ -5,15 +5,12 @@ import { useRepo } from "../../hooks/useRepo";
 import { useNavigation } from "expo-router";
 import RazorpayCheckout from "react-native-razorpay";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import {
-  createToken,
-  insertPaymentReq,
-  verifyPayment,
-} from "../../api/booking";
+import { insertPaymentReq, verifyPayment } from "../../api/booking";
 import { sendBookingDetails } from "../../api/sendSMS";
+import { createHospitalToken } from "../../api/hospital";
 
-const Checkout = () => {
-  const { bookingInfo, patient, setBookingInfo } = useRepo();
+const HospitalCheckout = () => {
+  const { hospitalBookingInfo, patient, setHospitalBookingInfo } = useRepo();
   const navigation = useNavigation();
   const [paymentSuccess, setPaymentSuccess] = useState(false);
   const [error, setError] = useState(null);
@@ -48,11 +45,11 @@ const Checkout = () => {
     return `${day.toString().padStart(2, "0")}-${months[month]}-${year}`;
   }
 
-  const formattedTime = formatTime(bookingInfo.appTime);
+  const formattedTime = formatTime(hospitalBookingInfo.appTime);
 
   useEffect(() => {
     if (paymentSuccess) {
-      navigation.navigate("(pages)/invoice");
+      navigation.navigate("(pages)/hospitalInvoice");
     }
   }, [paymentSuccess]);
 
@@ -60,11 +57,11 @@ const Checkout = () => {
     try {
       const user = await getUserFromStorage();
       const response = await insertPaymentReq(
-        bookingInfo.transactionId,
+        hospitalBookingInfo.transactionId,
         user.Id,
         patient.phoneNumber,
         "100",
-        "clinic"
+        "hospital"
       );
       if (!response) throw new Error("Failed to insert payment");
       return response.orderId;
@@ -75,8 +72,8 @@ const Checkout = () => {
   };
 
   const handlePayment = async () => {
-    console.log("Payment button clicked");
-    console.log(bookingInfo, patient);
+    // console.log("Payment button clicked");
+    // console.log(hospitalBookingInfo, patient);
 
     try {
       const orderId = await createPaymentRequest();
@@ -125,38 +122,40 @@ const Checkout = () => {
         data.razorpay_payment_id,
         data.razorpay_signature
       );
+      // console.log("Payment Verify: ", response.ResponseStatus);
+
       if (response.ResponseStatus === "success") {
         alert("Payment successful.");
-        console.log("Payment status: ", bookingInfo, patient);
+        console.log("Payment status: ", hospitalBookingInfo, patient);
         const tokenData = {
-          DocId: bookingInfo.docId,
-          clinicId: bookingInfo.clinicId,
-          appDate: bookingInfo.appDate,
-          appTimeSlot: bookingInfo.appTime,
+          DocId: hospitalBookingInfo.docId,
+          hospitalId: hospitalBookingInfo.hospitalId,
+          appDate: hospitalBookingInfo.appDate,
+          appTimeSlot: hospitalBookingInfo.appTime,
           PatId: patient.patientId,
-          shift: bookingInfo.shift,
-          slotNo: bookingInfo.slotNumber,
-          guidId: bookingInfo.transactionId,
+          shift: hospitalBookingInfo.shift,
+          slotNo: hospitalBookingInfo.slotNumber,
+          guidId: hospitalBookingInfo.transactionId,
           status: "success",
           paymentId: data.razorpay_payment_id,
           signature: data.razorpay_signature,
         };
-        const tokenResponse = await createToken(tokenData);
+        const tokenResponse = await createHospitalToken(tokenData);
         if (tokenResponse.bookingId) {
           sendBookingDetails(
             patient.phoneNumber,
-            bookingInfo.slotNumber,
-            bookingInfo.appDate,
-            getFormatedDate(bookingInfo.appTime),
-            bookingInfo.docName,
+            hospitalBookingInfo.slotNumber,
+            hospitalBookingInfo.appDate,
+            getFormatedDate(hospitalBookingInfo.appTime),
+            hospitalBookingInfo.docName,
             tokenResponse.bookingId,
             tokenResponse.tokenId
           );
-          setBookingInfo((prev) => ({
+          setHospitalBookingInfo((prev) => ({
             ...prev,
             bookingId: tokenResponse.bookingId,
           }));
-          navigation.navigate("(pages)/invoice");
+          navigation.navigate("(pages)/hospitalInvoice");
         } else {
           alert("Something went wrong!");
         }
@@ -189,23 +188,26 @@ const Checkout = () => {
             <View className="mb-4 flex flex-row items-baseline border-dashed border-b border-gray-400">
               <Text className="text-lg mb-2">Doctor Name:</Text>
               <Text className="text-lg ml-4 mb-2">
-                Dr. {bookingInfo.docName}
+                Dr. {hospitalBookingInfo.docName}
               </Text>
             </View>
 
             <View className="mb-4 flex flex-row items-start border-dashed border-b border-gray-400">
-              <Text className="text-lg mb-2">Clinic Details:</Text>
+              <Text className="text-lg mb-2">Hospital Details:</Text>
               <View className="ml-4 flex-1 mb-2">
-                <Text className="text-lg">{bookingInfo.clinicName}</Text>
-                <Text className="text-sm">{bookingInfo.clinicAddress}</Text>
-                <Text className="text-sm">{bookingInfo.clinicPhone}</Text>
+                <Text className="text-lg">
+                  {hospitalBookingInfo.hospitalName}
+                </Text>
+                <Text className="text-sm">
+                  {hospitalBookingInfo.hospitalAdd}
+                </Text>
               </View>
             </View>
 
             <View className="mb-4 flex flex-row items-baseline border-dashed border-b border-gray-400">
               <Text className="text-lg mb-2">Date & Time:</Text>
               <Text className="text-lg ml-4 mb-2">
-                {getFormatedDate(bookingInfo.appDate)}, {formattedTime}
+                {getFormatedDate(hospitalBookingInfo.appDate)}, {formattedTime}
               </Text>
             </View>
 
@@ -264,4 +266,4 @@ const Checkout = () => {
   );
 };
 
-export default Checkout;
+export default HospitalCheckout;

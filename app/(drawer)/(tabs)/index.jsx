@@ -17,9 +17,8 @@ import { useNavigation } from "expo-router";
 
 export default function HomeScreen() {
   const [placeholder, setPlaceholder] = useState("Search for doctors");
-  const navigation = useNavigation();
   const [refreshing, setRefreshing] = useState(false);
-  const inputRef = useRef("");
+  const navigation = useNavigation();
 
   useEffect(() => {
     const intervalId = setInterval(() => {
@@ -31,10 +30,6 @@ export default function HomeScreen() {
     }, 3000);
     return () => clearInterval(intervalId);
   }, [placeholder]);
-
-  const handleInputChange = (e) => {
-    inputRef.current = e.target.value;
-  };
 
   const onRefresh = React.useCallback(() => {
     setRefreshing(true);
@@ -50,13 +45,18 @@ export default function HomeScreen() {
         <View className="px-3 py-3">
           <View className="flex-row items-center justify-between">
             <DrawerMenu />
-            <View className="flex-row gap-2 items-center justify-center">
-              <Image
-                source={require("@/assets/images/logo.jpg")}
-                className="h-10 w-10"
-              />
-              <Text className="font-bold text-2xl text-red-500">
-                UBIQ<Text className="text-primary">CURE</Text>
+            <View>
+              <View className="flex-row gap-2 items-center justify-center">
+                <Image
+                  source={require("@/assets/images/logo.jpg")}
+                  className="h-8 w-8"
+                />
+                <Text className="font-bold text-2xl text-red-500">
+                  UBIQ<Text className="text-primary">CURE</Text>
+                </Text>
+              </View>
+              <Text className="text-sm italic text-center font-semibold text-primary">
+                Striving for Your Better Healthcare!
               </Text>
             </View>
             <Whatsapp />
@@ -64,8 +64,7 @@ export default function HomeScreen() {
           <View className="pt-4">
             <TextInput
               placeholder={placeholder}
-              value={inputRef.current}
-              onChange={handleInputChange}
+              onPress={() => navigation.navigate("(pages)/search")}
               className="w-full p-2 px-5 border border-blue-300 rounded-full"
             />
           </View>
@@ -77,16 +76,24 @@ export default function HomeScreen() {
         >
           <View className="pb-2">
             <View className="mb-5 px-3">
-              <Text className="text-xl font-bold text-center text-primary">
-                Striving for Your Better Healthcare!
+              <Text className="text-base font-semibold text-center text-primary">
+                {/* Striving for Your Better Healthcare! */}
+                Book your Doctor's Appointment with{" "}
+                <Text className="text-red-600 text-xl font-bold">MedTrack</Text>
               </Text>
-              <Text className="mt-2 text-center font-bold text-gray-700">
+              {/* <Text className="mt-2 text-center text-gray-700">
                 Why to wait at Doctor's Clinics when you can track your
                 appointment. Reach at clinic only at your turn.
               </Text>
-              <Text className="mt-1 text-center font-bold text-gray-700">
+              <Text className="mt-1 text-center text-gray-700">
                 Book your doctor's appointments & Track your token status live!
                 Get real-time updates & save your time.
+              </Text> */}
+              <Text className="mt-1 mx-1 text-center text-gray-700">
+                Why to wait at doctor's clinics when you can book your
+                appointments & track your token status live? Reach at Doctor's
+                clinic only when it's your turn, get real-time updates, avoid
+                discomfort to patient and save your time!
               </Text>
             </View>
 
@@ -115,7 +122,7 @@ export default function HomeScreen() {
                       className="w-full h-32 rounded-lg rounded-b-none"
                     />
                     <View className="p-4">
-                      <Text className="text-sm font-semibold text-gray-700">
+                      <Text className="text-md font-semibold text-gray-700">
                         Book Appointment
                       </Text>
                     </View>
@@ -131,14 +138,11 @@ export default function HomeScreen() {
                 >
                   <View className="border-2 border-gray-200 rounded-lg">
                     <Image
-                      // source={{
-                      //   uri: "https://via.placeholder.com/150?text=Track Appointment",
-                      // }}
                       source={require("@/assets/images/track.jpg")}
                       className="w-full h-32 rounded-lg rounded-b-none"
                     />
                     <View className="p-4">
-                      <Text className="text-sm font-semibold text-gray-700">
+                      <Text className="text-md font-semibold text-gray-700">
                         Track Appointment
                       </Text>
                     </View>

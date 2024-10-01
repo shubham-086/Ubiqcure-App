@@ -4,9 +4,6 @@ import {
   Image,
   TouchableOpacity,
   ScrollView,
-  Button,
-  Pressable,
-  Touchable,
   ActivityIndicator,
 } from "react-native";
 import React, { useEffect, useState } from "react";

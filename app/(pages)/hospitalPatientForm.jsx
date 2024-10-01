@@ -9,53 +9,29 @@ import OtpVerification from "../../components/OtpVerification";
 import ModalView from "../../components/ModalView";
 import { insertAppRequest, insertPatient } from "../../api/booking";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { insertHospitalAppRequest } from "../../api/hospital";
 
-const PatientForm = () => {
-  const [patientName, setPatientName] = useState("");
-  const [age, setAge] = useState("");
-  const [gender, setGender] = useState("");
-  const [phoneNumber, setPhoneNumber] = useState("");
-  const [email, setEmail] = useState("");
+const HospitalPatientForm = () => {
+  const [formData, setFormData] = useState({
+    patientName: "",
+    age: "",
+    gender: "",
+    phoneNumber: "",
+    email: "",
+  });
+
+  const [errors, setErrors] = useState({});
+
   const [showModal, setShowModal] = useState(false);
   const [isOTPVarified, setIsOTPVerified] = useState(false);
-  const [errors, setErrors] = useState({
-    patientName: false,
-    age: false,
-    gender: false,
-    phoneNumber: false,
-    email: false,
-  });
-  const { bookingInfo, setBookingInfo, patient, setPatient } = useRepo();
+
+  const { hospitalBookingInfo, setHospitalBookingInfo, patient, setPatient } =
+    useRepo();
   const navigation = useNavigation();
 
   const handleInputChange = (field, value) => {
-    switch (field) {
-      case "patientName":
-        setPatientName(value);
-        setErrors((prevErrors) => ({ ...prevErrors, patientName: !value }));
-        break;
-      case "age":
-        setAge(value);
-        setErrors((prevErrors) => ({ ...prevErrors, age: !value }));
-        break;
-      case "gender":
-        setGender(value);
-        setErrors((prevErrors) => ({ ...prevErrors, gender: !value }));
-        break;
-      case "phoneNumber":
-        setPhoneNumber(value);
-        setErrors((prevErrors) => ({ ...prevErrors, phoneNumber: !value }));
-        break;
-      case "email":
-        setEmail(value);
-        setErrors((prevErrors) => ({
-          ...prevErrors,
-          email: !isValidEmail(value),
-        }));
-        break;
-      default:
-        break;
-    }
+    setFormData((prevData) => ({ ...prevData, [field]: value }));
+    setErrors((prevErrors) => ({ ...prevErrors, [field]: !value }));
   };
 
   const isValidEmail = (email) => {
@@ -63,24 +39,42 @@ const PatientForm = () => {
     return emailRegex.test(email);
   };
 
+  const validateForm = () => {
+    let valid = true;
+    let newErrors = {};
+
+    if (!formData.patientName) {
+      newErrors.patientName = "Patient name is required";
+      valid = false;
+    }
+
+    if (!formData.age) {
+      newErrors.age = "Age is required";
+      valid = false;
+    }
+
+    if (!formData.gender) {
+      newErrors.gender = "Gender is required";
+      valid = false;
+    }
+
+    if (!formData.phoneNumber || formData.phoneNumber.length < 10) {
+      newErrors.phoneNumber = "Phone number is invalid";
+      valid = false;
+    }
+
+    if (formData.email && !isValidEmail(formData.email)) {
+      newErrors.email = "Invalid email address";
+      valid = false;
+    }
+
+    setErrors(newErrors);
+    return valid;
+  };
+
   const handleSubmit = () => {
-    if (!patientName || !age || !gender || !phoneNumber) {
-      setErrors({
-        patientName: !patientName,
-        age: !age,
-        gender: !gender,
-        phoneNumber: !phoneNumber,
-        email: !isValidEmail(email),
-      });
-    } else {
-      setPatient({
-        patientName,
-        age,
-        gender,
-        phoneNumber,
-        email,
-      });
-      console.log(phoneNumber);
+    if (validateForm()) {
+      setPatient(formData);
       setShowModal(true);
     }
   };
@@ -91,25 +85,30 @@ const PatientForm = () => {
 
   const createAppRequest = async () => {
     try {
-      const user = JSON.parse(await AsyncStorage.getItem("user"));
+      const user = await AsyncStorage.getItem("user").then(JSON.parse);
       if (!user) throw new Error("User not found");
 
-      const response = await insertPatient(patient, user.Id, "clinic");
-      if (!response || !response.patientId)
-        throw new Error("Failed to insert patient");
+      const response = await insertPatient(formData, user.Id, "hospital");
+
+      if (!response?.patientId) throw new Error("Failed to insert patient");
 
       setPatient((prev) => ({ ...prev, patientId: response.patientId }));
-      const appReqResponse = await insertAppRequest(
-        bookingInfo,
+
+      const appReqResponse = await insertHospitalAppRequest(
+        hospitalBookingInfo,
         response.patientId
       );
+
+      // console.log("Appointment Request Response: ", appReqResponse);
+
       if (!appReqResponse)
         throw new Error("Failed to insert appointment request");
 
-      setBookingInfo((prev) => ({
+      setHospitalBookingInfo((prev) => ({
         ...prev,
         transactionId: appReqResponse.guidId,
       }));
+
       return true;
     } catch (error) {
       console.error("Error in creating Appointment Request: ", error);
@@ -117,16 +116,19 @@ const PatientForm = () => {
     }
   };
 
+  // Navigate after appointment request is created
   const handleNavigation = async () => {
-    handleModalClose();
+    setShowModal(false);
     const response = await createAppRequest();
-    console.log(response);
     if (response) {
-      navigation.navigate("(pages)/checkout");
+      navigation.navigate("(pages)/hospitalCheckout");
     }
   };
 
+  // Handle navigation on OTP verification
   useEffect(() => {
+    // console.log(hospitalBookingInfo);
+
     if (isOTPVarified) {
       handleNavigation();
     }
@@ -141,6 +143,7 @@ const PatientForm = () => {
             Please fill out the form below to book an appointment.
           </Text>
 
+          {/* Patient Name Input */}
           <View className="mb-4">
             <View
               className={`p-3 ${
@@ -149,7 +152,7 @@ const PatientForm = () => {
             >
               <TextInput
                 placeholder="Patient Name"
-                value={patientName}
+                value={formData.patientName}
                 onChangeText={(text) => handleInputChange("patientName", text)}
                 className="text-lg bg-white w-full"
               />
@@ -160,9 +163,11 @@ const PatientForm = () => {
               )}
             </View>
             {errors.patientName && (
-              <Text className="text-red-500 text-sm">Required field</Text>
+              <Text className="text-red-500 text-sm">{errors.patientName}</Text>
             )}
           </View>
+
+          {/* Age Input */}
           <View className="mb-4">
             <View
               className={`p-3 ${
@@ -171,9 +176,8 @@ const PatientForm = () => {
             >
               <TextInput
                 placeholder="Age"
-                value={age}
+                value={formData.age}
                 keyboardType="numeric"
-                inputMode="numeric"
                 maxLength={2}
                 onChangeText={(text) => handleInputChange("age", text)}
                 className="text-lg bg-white w-full"
@@ -185,21 +189,22 @@ const PatientForm = () => {
               )}
             </View>
             {errors.age && (
-              <Text className="text-red-500 text-sm">Required field</Text>
+              <Text className="text-red-500 text-sm">{errors.age}</Text>
             )}
           </View>
+
+          {/* Gender Picker */}
           <View className="mb-4">
             <View
               className={`p-1 ${
                 errors.gender ? "border-red-600" : "border-primary"
-              } border rounded-lg `}
+              } border rounded-lg`}
             >
               <Picker
-                selectedValue={gender}
+                selectedValue={formData.gender}
                 onValueChange={(itemValue) =>
                   handleInputChange("gender", itemValue)
                 }
-                style={{ margin: -5 }}
               >
                 <Picker.Item label="Select Gender" value="" />
                 <Picker.Item label="Male" value="Male" />
@@ -208,9 +213,11 @@ const PatientForm = () => {
               </Picker>
             </View>
             {errors.gender && (
-              <Text className="text-red-500 text-sm">Required field</Text>
+              <Text className="text-red-500 text-sm">{errors.gender}</Text>
             )}
           </View>
+
+          {/* Phone Number Input */}
           <View className="mb-4">
             <View
               className={`p-3 ${
@@ -219,9 +226,8 @@ const PatientForm = () => {
             >
               <TextInput
                 placeholder="Phone Number"
-                value={phoneNumber}
+                value={formData.phoneNumber}
                 keyboardType="numeric"
-                inputMode="numeric"
                 maxLength={10}
                 onChangeText={(text) => handleInputChange("phoneNumber", text)}
                 className="text-lg bg-white w-full"
@@ -233,21 +239,24 @@ const PatientForm = () => {
               )}
             </View>
             {errors.phoneNumber && (
-              <Text className="text-red-500 text-sm">Required field</Text>
+              <Text className="text-red-500 text-sm">{errors.phoneNumber}</Text>
             )}
           </View>
+
+          {/* Email Input */}
           <View className="p-3 border-primary border rounded-lg">
             <TextInput
               placeholder="Email (optional)"
-              value={email}
-              inputMode="email"
+              value={formData.email}
               onChangeText={(text) => handleInputChange("email", text)}
               className="text-lg bg-white w-full"
             />
           </View>
-          {email && !isValidEmail(email) && (
+          {formData.email && !isValidEmail(formData.email) && (
             <Text className="text-red-500 text-sm">Invalid email address</Text>
           )}
+
+          {/* Submit Button */}
           <View className="flex justify-center mt-10">
             <Text
               onPress={handleSubmit}
@@ -258,14 +267,16 @@ const PatientForm = () => {
           </View>
         </View>
       </ScrollView>
+
+      {/* OTP Modal */}
       <ModalView showModal={showModal} onRequestClose={handleModalClose}>
         <OtpVerification
           setIsOTPVerified={setIsOTPVerified}
-          phoneNumber={phoneNumber}
+          phoneNumber={formData.phoneNumber}
         />
       </ModalView>
     </View>
   );
 };
 
-export default PatientForm;
+export default HospitalPatientForm;

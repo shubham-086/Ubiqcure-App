@@ -148,7 +148,7 @@ const Tracking = () => {
               className="flex-1 bg-red-500 py-3 rounded-lg ml-2"
               onPress={() => console.log("Cancel")}
             >
-              <Text className="text-center text-white text-lg">Cancle</Text>
+              <Text className="text-center text-white text-lg">Cancel</Text>
             </TouchableOpacity>
           </View>
         </View>

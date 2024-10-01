@@ -89,11 +89,11 @@ export default function RootLayout() {
   const checkLoginStatus = async () => {
     let user = await AsyncStorage.getItem("user");
     if (user) {
-      console.log(user);
-      router.replace("(drawer)");
+      // console.log(user);
+      router.replace("/(drawer)");
     } else {
-      console.log(user);
-      router.replace("(auth)");
+      // console.log(user);
+      router.replace("/(auth)");
     }
   };
 

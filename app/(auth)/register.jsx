@@ -11,7 +11,7 @@ import { AntDesign } from "@expo/vector-icons";
 import { Picker } from "@react-native-picker/picker";
 import ToastNotification from "@/components/ToastNotification";
 import ModalView from "@/components/ModalView";
-import OtpVerification from "@/components/OtpVarification";
+import OtpVerification from "@/components/OtpVerification";
 import { useNavigation } from "expo-router";
 import { checkUser, registerUser } from "@/api/user";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -36,7 +36,7 @@ const Register = () => {
   const [toastMsg, setToastMsg] = useState("");
   const [toastStatus, setToastStatus] = useState("");
   const [showModal, setShowModal] = useState(false);
-  const [isOTPVarified, setIsOTPVarified] = useState(false);
+  const [isOTPVarified, setIsOTPVerified] = useState(false);
 
   useEffect(() => {
     console.log("isOTPVarified changed:", isOTPVarified);
@@ -241,7 +241,7 @@ const Register = () => {
       </ScrollView>
       <ModalView showModal={showModal} onRequestClose={handleModalClose}>
         <OtpVerification
-          setIsOTPVarified={setIsOTPVarified}
+          setIsOTPVerified={setIsOTPVerified}
           phoneNumber={formState.phoneNumber}
         />
       </ModalView>

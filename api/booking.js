@@ -12,7 +12,7 @@ export const insertAppRequest = async (bookingInfo, patientId) => {
     shift: bookingInfo.shift,
     slotNo: bookingInfo.slotNumber,
   };
-  // console.log(data);
+
   try {
     const response = await axios.post(
       `${baseUrl}/Appointment/insertAppRequest`,
@@ -30,7 +30,7 @@ export const insertAppRequest = async (bookingInfo, patientId) => {
   }
 };
 
-export const insertPatient = async (patient, userId) => {
+export const insertPatient = async (patient, userId, appointmentFor) => {
   const data = {
     Pname: patient.patientName,
     PmobileNo: patient.phoneNumber,
@@ -39,7 +39,9 @@ export const insertPatient = async (patient, userId) => {
     today: new Date(Date.now()).toISOString(),
     PGender: patient.gender,
     userId: userId,
+    appointmentFor: appointmentFor,
   };
+  console.log(data);
   try {
     const response = await axios.post(
       `${baseUrl}/Appointment/insertPatient`,
@@ -61,7 +63,6 @@ export const viewAppRequestDetails = async (guidId) => {
   const data = {
     guidId: guidId,
   };
-  // console.log(data);
 
   try {
     const response = await axios.post(
@@ -105,7 +106,8 @@ export const insertPaymentReq = async (
   guidId,
   userId,
   UserPhone,
-  bookingFees
+  bookingFees,
+  appointmentFor
 ) => {
   const orderIdResponse = await getOrderId();
   const data = {
@@ -114,6 +116,7 @@ export const insertPaymentReq = async (
     userId,
     UserPhone,
     bookingFees,
+    appointmentFor,
   };
 
   try {
@@ -153,7 +156,6 @@ export const verifyPayment = async (orderId, paymentId, signature) => {
 };
 
 export const createToken = async (data) => {
-  // console.log("update payment: ", data);
   try {
     const response = await axios.post(
       `${baseUrl}/Appointment/insertAppToken`,
@@ -175,7 +177,7 @@ export const createToken = async (data) => {
       return null;
     }
   } catch (error) {
-    console.error("Error fetching data: ", error);
+    console.error("Error Creating data: ", error);
     return null;
   }
 };

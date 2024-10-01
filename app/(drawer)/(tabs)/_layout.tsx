@@ -5,7 +5,7 @@ import { Colors } from "@/constants/Colors";
 import { useColorScheme } from "@/hooks/useColorScheme";
 import Fontisto from "@expo/vector-icons/Fontisto";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
-import { FontAwesome } from "@expo/vector-icons";
+import { FontAwesome, MaterialCommunityIcons } from "@expo/vector-icons";
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
@@ -34,7 +34,7 @@ export default function TabLayout() {
         <Tabs.Screen
           name="doctorsList"
           options={{
-            title: "View Doctors",
+            title: "Doctors",
             tabBarIcon: ({ color, focused }) => (
               <Fontisto
                 name={"doctor"}
@@ -46,9 +46,23 @@ export default function TabLayout() {
           }}
         />
         <Tabs.Screen
+          name="hospitals"
+          options={{
+            title: "Hospitals",
+            tabBarIcon: ({ color, focused }) => (
+              <MaterialCommunityIcons
+                name="hospital-building"
+                size={28}
+                style={{ marginBottom: -3 }}
+                color={color}
+              />
+            ),
+          }}
+        />
+        <Tabs.Screen
           name="myBookings"
           options={{
-            title: "My Bookings",
+            title: "Bookings",
             tabBarIcon: ({ color, focused }) => (
               <FontAwesome
                 name={focused ? "plus-square" : "plus-square-o"}

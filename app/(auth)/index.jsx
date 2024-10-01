@@ -5,11 +5,12 @@ import {
   TextInput,
   TouchableOpacity,
   ScrollView,
+  ActivityIndicator,
 } from "react-native";
 import React, { useEffect, useState } from "react";
 import { AntDesign } from "@expo/vector-icons";
 import ModalView from "@/components/ModalView";
-import OtpVerification from "@/components/OtpVarification";
+import OtpVerification from "@/components/OtpVerification";
 import { useNavigation } from "expo-router";
 import { checkUser } from "@/api/user";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -18,21 +19,23 @@ import ToastNotification from "@/components/ToastNotification";
 const Login = () => {
   const [phoneNumber, setPhoneNumber] = useState("");
   const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false); // Default to false
   const [showModal, setShowModal] = useState(false);
-  const [isOTPVarified, setIsOTPVarified] = useState(false);
-  const [error, setError] = useState(false);
+  const [isOTPVerified, setIsOTPVerified] = useState(false); // Typo correction: Varified -> Verified
+  const [error, setError] = useState("");
   const navigation = useNavigation();
   const [showToast, setShowToast] = useState(false);
   const [toastStatus, setToastStatus] = useState("");
 
+  // OTP verified effect to trigger modal close and navigation
   useEffect(() => {
-    if (isOTPVarified) {
+    if (isOTPVerified) {
       setShowModal(false);
       handleNavigation();
     }
-  }, [isOTPVarified]);
+  }, [isOTPVerified]);
 
+  // Function to navigate and store user data
   const handleNavigation = async () => {
     try {
       await AsyncStorage.setItem("user", JSON.stringify(user));
@@ -40,46 +43,59 @@ const Login = () => {
       setShowToast(true);
       setTimeout(() => {
         navigation.navigate("(drawer)");
-      }, 2000);
+      }, 2000); // Toast visible for 2 seconds before navigation
     } catch (error) {
       console.error("Error saving user data", error);
     }
   };
 
+  // Handle input change and validate phone number
   const handleInputChange = (text) => {
     setPhoneNumber(text);
-    setError(!text);
+    setError(!text ? "Phone number is required" : ""); // Simple validation for non-empty input
   };
 
+  // Function to submit the phone number and check user existence
   const handleSubmit = async () => {
     if (!phoneNumber) {
-      setError(true);
-    } else {
-      setLoading(true);
-      await checkUser(phoneNumber)
-        .then((response) => {
-          const fetchedUser = response.data.ResponseStatus[0];
-          setUser(fetchedUser);
-          setLoading(false);
+      setError("Phone number is required");
+      return;
+    }
 
-          if (fetchedUser && fetchedUser.PhoneNo.toString() === phoneNumber) {
-            setShowModal(true);
-          } else {
-            setToastStatus("warning");
-            setShowToast(true);
-            console.log("User does not exist");
-          }
-        })
-        .catch((error) => {
-          console.error("Error fetching User Data: ", error);
-          setLoading(false);
-        });
+    setLoading(true); // Set loading state before async request
+    try {
+      const response = await checkUser(phoneNumber);
+      const fetchedUser = response.data.ResponseStatus?.[0];
+      setUser(fetchedUser);
+
+      if (fetchedUser && fetchedUser.PhoneNo.toString() === phoneNumber) {
+        setShowModal(true);
+      } else {
+        setToastStatus("warning");
+        setShowToast(true);
+        console.log("User does not exist");
+      }
+    } catch (error) {
+      console.error("Error fetching User Data: ", error);
+      setToastStatus("error");
+      setShowToast(true);
+    } finally {
+      setLoading(false); // Ensure loading is turned off after request
     }
   };
 
+  // Handle closing of the modal
   const handleModalClose = () => {
     setShowModal(false);
   };
+
+  if (loading) {
+    return (
+      <View className="flex-1 justify-center items-center">
+        <ActivityIndicator size="large" color="#006298" />
+      </View>
+    );
+  }
 
   return (
     <View className="flex-1 bg-white justify-center items-center">
@@ -151,7 +167,7 @@ const Login = () => {
           </View>
           <ModalView showModal={showModal} onRequestClose={handleModalClose}>
             <OtpVerification
-              setIsOTPVarified={setIsOTPVarified}
+              setIsOTPVerified={setIsOTPVerified}
               phoneNumber={phoneNumber}
             />
           </ModalView>

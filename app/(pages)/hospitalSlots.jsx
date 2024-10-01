@@ -9,40 +9,40 @@ import {
 } from "react-native";
 import React, { useEffect, useState } from "react";
 import { useNavigation } from "expo-router";
-import { getBookedSlots, getClinicSlots } from "../../api/doctor";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import Header from "../../components/Header";
 import { AntDesign, Feather, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useRepo } from "../../hooks/useRepo";
+import { getHospitalSlots } from "../../api/hospital";
 
-const ClinicSlots = () => {
+const HospitalSlots = () => {
   const [loading, setLoading] = useState(true);
   const [slots, setSlots] = useState([]);
   const [bookedSlots, setBookedSlots] = useState([]);
-  const [fomattedDate, setFormattedDate] = useState(
+  const [formattedDate, setFormattedDate] = useState(
     new Date().toLocaleDateString()
   );
   const [date, setDate] = useState(new Date());
   const [showPicker, setShowPicker] = useState(false);
   const navigation = useNavigation();
-  const { bookingInfo, setBookingInfo } = useRepo();
+  const { hospitalBookingInfo, setHospitalBookingInfo } = useRepo();
 
   const togglePicker = () => {
     setShowPicker(!showPicker);
   };
 
-  function getFormatedDate(utcDateString, utcTimeString) {
+  const getFormattedDate = (utcDateString) => {
     const utcDate = new Date(utcDateString);
     const year = utcDate.getUTCFullYear();
     const month = utcDate.getMonth();
     const day = utcDate.getDate();
-    months = [
+    const months = [
       "Jan",
       "Feb",
       "Mar",
       "Apr",
       "May",
-      "jun",
+      "Jun",
       "Jul",
       "Aug",
       "Sep",
@@ -51,78 +51,65 @@ const ClinicSlots = () => {
       "Dec",
     ];
     return `${day.toString().padStart(2, "0")}-${months[month]}-${year}`;
-  }
+  };
 
   const onChange = ({ type }, selectedDate) => {
     if (type === "set") {
-      let currentDate = getFormatedDate(selectedDate);
+      const currentDate = getFormattedDate(selectedDate);
       togglePicker();
       setDate(selectedDate);
       setFormattedDate(currentDate);
+    } else {
+      togglePicker();
     }
-    togglePicker();
   };
 
   useEffect(() => {
-    getClinicSlots(bookingInfo.clinicId, bookingInfo.docId, date)
+    getHospitalSlots(
+      hospitalBookingInfo.hospitalId,
+      hospitalBookingInfo.docId,
+      date
+    )
       .then((response) => {
         setSlots(response.data.ResponseStatus);
         setLoading(false);
       })
       .catch((error) => {
-        console.error("Error fetching Clinic Data: ", error);
+        console.error("Error fetching Slots Data: ", error);
         setLoading(false);
       });
-    getIssuedTokens();
-  }, [fomattedDate]);
-
-  const getIssuedTokens = async () => {
-    try {
-      setLoading(true);
-      const slots = await getBookedSlots(
-        bookingInfo.clinicId,
-        bookingInfo.docId,
-        date
-      );
-      setLoading(false);
-      setBookedSlots(slots);
-      console.log("Booked Slots: ", bookedSlots);
-    } catch (error) {
-      console.log("Error in fetching booked slots: ", error);
-    }
-  };
+  }, [formattedDate]);
 
   if (loading) {
     return (
       <View className="flex-1 justify-center items-center">
-        {/* <Text>Loading...</Text> */}
         <ActivityIndicator size="large" color="#006298" />
       </View>
     );
   }
-
-  // console.log(slots);
 
   const morningSlots = slots.filter((slot) => slot.Shift === "Morning");
   const afternoonSlots = slots.filter((slot) => slot.Shift === "Noon");
   const eveningSlots = slots.filter((slot) => slot.Shift === "Evening");
 
   const SlotButton = ({ slot }) => {
-    const time = slot.TimeSlot.split(":");
+    const time = slot.SlotTime.split(":");
     const hour = parseInt(time[0]);
     const minute = time[1];
     const ampm = hour >= 12 ? "PM" : "AM";
     const hour12 = hour % 12 || 12;
 
     const handlePress = () => {
-      setBookingInfo({
-        ...bookingInfo,
+      setHospitalBookingInfo({
+        ...hospitalBookingInfo,
         slotNumber: slot.SlotNumber,
         appDate: date,
-        appTime: slot.TimeSlot,
+        appTime: slot.SlotTime,
         shift: slot.Shift,
       });
-      navigation.navigate("(pages)/patientDetailsForm");
+      console.log(hospitalBookingInfo);
+
+      navigation.navigate("(pages)/hospitalPatientForm");
     };
 
     return (
@@ -144,11 +131,11 @@ const ClinicSlots = () => {
 
   return (
     <View className="flex-1 bg-white">
-      <Header title={`Dr. ${bookingInfo.docName}`} />
+      <Header title={`Dr. ${hospitalBookingInfo.docName}`} />
       <ScrollView>
-        <Text className="m-4 text-lg font-semiboold">
+        <Text className="m-4 text-lg font-semibold">
           <Text className="font-bold text-xl">Address: </Text>
-          {bookingInfo.clinicAddress}
+          {hospitalBookingInfo.hospitalAdd}
         </Text>
         <View className="flex-row items-center p-4">
           <View className="rounded-full p-1 bg-primary">
@@ -161,13 +148,11 @@ const ClinicSlots = () => {
         {showPicker && (
           <DateTimePicker
             mode="date"
-            display=""
             value={date}
             onChange={onChange}
             minimumDate={new Date()}
           />
         )}
-
         <View className="mx-4 my-2">
           <Pressable
             onPress={togglePicker}
@@ -175,7 +160,7 @@ const ClinicSlots = () => {
           >
             <TextInput
               editable={false}
-              placeholder={date.toISOString().substr(0, 10)}
+              value={formattedDate}
               placeholderTextColor="black"
               className="text-lg"
             />
@@ -183,53 +168,41 @@ const ClinicSlots = () => {
           </Pressable>
         </View>
         <View className="mx-5 my-5">
-          {morningSlots.length !== 0 && (
+          {morningSlots.length > 0 && (
             <View>
               <View className="flex-row items-center">
                 <Feather name="sunrise" size={20} color="gray" />
                 <Text className="text-lg text-gray-800 ml-3">Morning</Text>
               </View>
               <View className="flex-row flex-wrap justify-start mt-3">
-                {morningSlots.map((slot, index) => (
-                  <SlotButton
-                    key={slot.SlotNumber}
-                    slot={slot}
-                    style={{ width: "25%" }}
-                  />
+                {morningSlots.map((slot) => (
+                  <SlotButton key={slot.SlotNumber} slot={slot} />
                 ))}
               </View>
             </View>
           )}
-          {afternoonSlots.length !== 0 && (
+          {afternoonSlots.length > 0 && (
             <View>
               <View className="flex-row items-center mt-3">
                 <Feather name="sun" size={20} color="gray" />
                 <Text className="text-lg text-gray-800 ml-3">Afternoon</Text>
               </View>
               <View className="flex-row flex-wrap justify-start mt-3">
-                {afternoonSlots.map((slot, index) => (
-                  <SlotButton
-                    key={slot.SlotNumber}
-                    slot={slot}
-                    style={{ width: "25%" }}
-                  />
+                {afternoonSlots.map((slot) => (
+                  <SlotButton key={slot.SlotNumber} slot={slot} />
                 ))}
               </View>
             </View>
           )}
-          {eveningSlots.length !== 0 && (
+          {eveningSlots.length > 0 && (
             <View>
               <View className="flex-row items-center mt-3">
                 <Feather name="sunset" size={20} color="gray" />
                 <Text className="text-lg text-gray-800 ml-3">Evening</Text>
               </View>
               <View className="flex-row flex-wrap justify-start mt-3">
-                {eveningSlots.map((slot, index) => (
-                  <SlotButton
-                    key={slot.SlotNumber}
-                    slot={slot}
-                    style={{ width: "25%" }}
-                  />
+                {eveningSlots.map((slot) => (
+                  <SlotButton key={slot.SlotNumber} slot={slot} />
                 ))}
               </View>
             </View>
@@ -239,4 +212,4 @@ const ClinicSlots = () => {
     </View>
   );
 };
-export default ClinicSlots;
+export default HospitalSlots;

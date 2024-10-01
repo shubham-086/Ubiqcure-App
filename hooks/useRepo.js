@@ -9,6 +9,12 @@ export const useRepo = () => {
     setBookingInfo,
     patient,
     setPatient,
+    doctors,
+    setDoctors,
+    hospitals,
+    setHospitals,
+    hospitalBookingInfo,
+    setHospitalBookingInfo,
   } = useContext(AppContext);
 
   return {
@@ -18,5 +24,11 @@ export const useRepo = () => {
     setBookingInfo,
     patient,
     setPatient,
+    doctors,
+    setDoctors,
+    hospitals,
+    setHospitals,
+    hospitalBookingInfo,
+    setHospitalBookingInfo,
   };
 };

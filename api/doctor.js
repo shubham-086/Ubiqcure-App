@@ -89,3 +89,21 @@ export const getBookedSlots = async (clinicId, docId, date) => {
     return null;
   }
 };
+
+export const getAllSpecializations = async () => {
+  try {
+    const response = await axios.post(
+      `${baseUrl}/Appointment/getAllSpecializations`,
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+    // console.log(response.data.ResponseStatus);
+    return response.data.ResponseStatus;
+  } catch (error) {
+    console.error("Error fetching data: ", error);
+    return null;
+  }
+};

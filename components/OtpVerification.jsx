@@ -9,7 +9,7 @@ import {
 } from "react-native";
 import { generateOtp, sendOtpToMobile } from "../api/sendSMS";
 
-const OtpVerification = ({ setIsOTPVarified, phoneNumber }) => {
+const OtpVerification = ({ setIsOTPVerified, phoneNumber }) => {
   const [otp, setOtp] = useState(["", "", "", ""]);
   const inputs = useRef([]);
   const [isButtonDisabled, setIsButtonDisabled] = useState(false);
@@ -73,7 +73,7 @@ const OtpVerification = ({ setIsOTPVarified, phoneNumber }) => {
 
   const handleOtpSubmit = () => {
     const isOtpCorrect = otp.join("") === generatedOtp;
-    setIsOTPVarified(isOtpCorrect);
+    setIsOTPVerified(isOtpCorrect);
     if (isOtpCorrect) {
       console.log("OTP verified");
       ToastAndroid.show("OTP Verified", ToastAndroid.SHORT, ToastAndroid.TOP);
